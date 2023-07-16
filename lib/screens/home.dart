@@ -20,16 +20,16 @@ class _HomeState extends State<Home> {
         appBar: _buildAppBar(),
         floatingActionButton: FloatingActionButton(
           onPressed: () {
-            showDialog(context: context, builder: ((context) {
-              return AlertDialog(
-                title: Text("TextField in Dialog"),
-                content: TextField(
-                  onChanged: (value) {
+            // showDialog(context: context, builder: ((context) {
+            //   return AlertDialog(
+            //     title: Text("TextField in Dialog"),
+            //     content: TextField(
+            //       onChanged: (value) {
 
-                  },
-                ),
-              )
-            })
+            //       },
+            //     ),
+            //   );
+            // });
           },
           backgroundColor: tdBlue,
           child: const Icon(Icons.add),
@@ -47,7 +47,12 @@ class _HomeState extends State<Home> {
                         style: TextStyle(
                             fontSize: 30, fontWeight: FontWeight.w500)),
                   ),
-                  for (ToDo it in todoList) ToDoItem(todo: it)
+                  for (ToDo it in todoList)
+                    ToDoItem(
+                      todo: it,
+                      onToDoChanged: _handleToDoChange,
+                      onDeleteItem: () {},
+                    )
                 ],
               ),
             )
@@ -103,19 +108,25 @@ class _HomeState extends State<Home> {
   }
 
   void _handleToDoChange(ToDo todo) {
-    todo.isDone = !todo.isDone;
+    setState(() {
+      todo.isDone = !todo.isDone;
+    });
   }
 
   Future<void> _displayToDoInputDialog(BuildContext context) async {
-    return showDialog(context: context, builder: (context) {
-      return AlertDialog(
-        title: Text('Add ToDo Item'),
-        content: TextField(
-          onChanged: (value) {
-            setState()
-          },
-        ),
-      )
-    });
+    return showDialog(
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+            title: Text('Add ToDo Item'),
+            content: TextField(
+              onChanged: (value) {
+                setState(() {
+                  return;
+                });
+              },
+            ),
+          );
+        });
   }
 }
