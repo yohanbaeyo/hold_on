@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import '../constants/colors.dart';
 import '../widgets/todo_item.dart';
@@ -12,6 +14,9 @@ class Home extends StatefulWidget {
 
 class _HomeState extends State<Home> {
   final todoList = ToDo.todoList();
+  String addTodoDialogTextInput = "";
+  String todoItemTitle = "";
+  final TextEditingController textEditingController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
@@ -20,16 +25,7 @@ class _HomeState extends State<Home> {
         appBar: _buildAppBar(),
         floatingActionButton: FloatingActionButton(
           onPressed: () {
-            // showDialog(context: context, builder: ((context) {
-            //   return AlertDialog(
-            //     title: Text("TextField in Dialog"),
-            //     content: TextField(
-            //       onChanged: (value) {
-
-            //       },
-            //     ),
-            //   );
-            // });
+            _displayToDoInputDialog(context);
           },
           backgroundColor: tdBlue,
           child: const Icon(Icons.add),
@@ -38,22 +34,49 @@ class _HomeState extends State<Home> {
           padding: EdgeInsets.symmetric(horizontal: 20, vertical: 15),
           child: Column(children: [
             searchBox(),
+            Container(
+              margin: EdgeInsets.only(top: 50, bottom: 20),
+              child: Text('All ToDos',
+                  style: TextStyle(fontSize: 30, fontWeight: FontWeight.w500)),
+            ),
             Expanded(
-              child: ListView(
-                children: [
-                  Container(
-                    margin: EdgeInsets.only(top: 50, bottom: 20),
-                    child: Text('All ToDos',
-                        style: TextStyle(
-                            fontSize: 30, fontWeight: FontWeight.w500)),
-                  ),
-                  for (ToDo it in todoList)
-                    ToDoItem(
-                      todo: it,
+              // child: ListView(
+              //   children: [
+              //     for (ToDo it in todoList)
+              //       ToDoItem(
+              //         todo: it,
+              //         onToDoChanged: _handleToDoChange,
+              //         onDeleteItem: () {},
+              //       )
+              //   ],
+              // ),
+              child: ListView.builder(
+                itemCount: todoList.length,
+                itemBuilder: (context, index) {
+                  final item = todoList[index];
+                  return Dismissible(
+                    key: Key(item.id.toString()),
+                    child: ToDoItem(
+                      todo: item,
                       onToDoChanged: _handleToDoChange,
                       onDeleteItem: () {},
-                    )
-                ],
+                    ),
+                    onDismissed: (direction) {
+                      setState(() {
+                        todoList.removeAt(index);
+                      });
+                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                          content:
+                              Text("ToDo Item '${item.todoText}' dismissed")));
+                    },
+                    background: Container(
+                      margin: EdgeInsets.only(bottom: 20),
+                      decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(20),
+                          color: Colors.red),
+                    ),
+                  );
+                },
               ),
             )
           ]),
@@ -113,19 +136,54 @@ class _HomeState extends State<Home> {
     });
   }
 
+  void _deleteToDoItem(int id) {
+    setState(() {
+      todoList.removeWhere((element) => element.id == id);
+    });
+  }
+
   Future<void> _displayToDoInputDialog(BuildContext context) async {
     return showDialog(
         context: context,
         builder: (context) {
           return AlertDialog(
-            title: Text('Add ToDo Item'),
+            title: Text('Add New'),
             content: TextField(
               onChanged: (value) {
                 setState(() {
-                  return;
+                  addTodoDialogTextInput = value;
                 });
               },
+              controller: textEditingController,
+              decoration: const InputDecoration(hintText: "Todo Title"),
             ),
+            actions: [
+              MaterialButton(
+                color: Colors.red,
+                textColor: Colors.white,
+                child: Text("Cancel"),
+                onPressed: () {
+                  setState(() {
+                    Navigator.pop(context);
+                  });
+                },
+              ),
+              MaterialButton(
+                color: Colors.green,
+                textColor: Colors.white,
+                child: Text("OK"),
+                onPressed: () {
+                  setState(() {
+                    todoList.add(ToDo(
+                        id: ToDo.latest_primary_number,
+                        todoText: addTodoDialogTextInput));
+                    ToDo.latest_primary_number++;
+                  });
+                  print(todoItemTitle);
+                  Navigator.pop(context);
+                },
+              )
+            ],
           );
         });
   }
