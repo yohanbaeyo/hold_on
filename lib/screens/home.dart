@@ -14,6 +14,7 @@ class Home extends StatefulWidget {
 
 class _HomeState extends State<Home> {
   final todoList = ToDo.todoList();
+  final filtered = ToDo.todoList();
   String addTodoDialogTextInput = "";
   String todoItemTitle = "";
   final TextEditingController textEditingController = TextEditingController();
@@ -35,8 +36,10 @@ class _HomeState extends State<Home> {
           child: Column(children: [
             searchBox(),
             Container(
+              alignment: Alignment.centerLeft,
               margin: EdgeInsets.only(top: 50, bottom: 20),
               child: Text('All ToDos',
+                  textAlign: TextAlign.start,
                   style: TextStyle(fontSize: 30, fontWeight: FontWeight.w500)),
             ),
             Expanded(
@@ -51,9 +54,9 @@ class _HomeState extends State<Home> {
               //   ],
               // ),
               child: ListView.builder(
-                itemCount: todoList.length,
+                itemCount: filtered.length,
                 itemBuilder: (context, index) {
-                  final item = todoList[index];
+                  final item = filtered[index];
                   return Dismissible(
                     key: Key(item.id.toString()),
                     child: ToDoItem(
@@ -63,7 +66,9 @@ class _HomeState extends State<Home> {
                     ),
                     onDismissed: (direction) {
                       setState(() {
-                        todoList.removeAt(index);
+                        todoList
+                            .removeWhere((element) => element.id == item.id);
+                        filtered.removeAt(index);
                       });
                       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
                           content:
@@ -83,12 +88,26 @@ class _HomeState extends State<Home> {
         ));
   }
 
+  String searchValue = "";
   Container searchBox() {
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 20),
       decoration: BoxDecoration(
           color: Colors.white, borderRadius: BorderRadius.circular(20)),
       child: TextField(
+        onChanged: (value) {
+          searchValue = value;
+        },
+        onEditingComplete: () {
+          setState(() {
+            filtered.clear();
+            for (ToDo it in todoList) {
+              if (it.todoText.contains(searchValue)) {
+                filtered.add(it);
+              }
+            }
+          });
+        },
         decoration: InputDecoration(
             contentPadding: EdgeInsets.all(0),
             suffixIcon: Icon(Icons.search, color: tdBlack, size: 20),
